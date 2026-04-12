@@ -1,84 +1,93 @@
-# 系統流程圖：線上算命系統
+# 流程圖設計 - 校園美食推薦系統
 
-本文件根據產品需求文件 (PRD) 與系統架構文件 (ARCHITECTURE)，繪製線上算命系統的使用者流程與系統資料流。
+以下文件根據系統的 PRD 與系統架構文件，視覺化呈現使用者的操作動線以及資料在系統內部的流動方式。
 
 ## 1. 使用者流程圖（User Flow）
 
-此流程圖描述使用者進入網站後，可以進行的各種操作路徑，包含抽籤互動、會員登入與後續如捐款、儲存等動作。
+此流程圖描述了從學生進入網站後，可以進行的各種動作與頁面跳轉邏輯。
 
 ```mermaid
 flowchart LR
-    A([使用者造訪首頁]) --> B[首頁 / 導覽]
-    B --> C{選擇系統功能}
+    A([使用者開啟網站]) --> B[首頁 - 餐廳列表]
     
-    %% 算命抽籤主流程
-    C -->|1. 開始抽籤/算命| D[前端互動動畫（擲筊/搖籤筒）]
-    D --> E[顯示算命與抽籤結果]
+    %% 註冊與登入模組
+    B --> C{是否已登入？}
+    C -->|否| D[點擊右上角 登入/註冊]
+    D --> E[填寫帳號密碼並送出]
+    E -->|成功| B
     
-    %% 抽籤結果後的後續動作
-    E --> F{觀看結果後...}
-    F -->|分享結果| K[呼叫社群分享 (FB/Line)]
-    F -->|儲存紀錄| G{是否已登入？}
+    %% 瀏覽與搜尋模組
+    B --> F[使用搜尋列/篩選器]
+    C -->|是| F
+    F -->|選擇距離/價格/類別| G[動態或重新載入餐廳列表]
     
-    G -->|未登入| I[導向登入/註冊頁面]
-    I -->|登入成功| H
-    G -->|已登入| H[將紀錄存入個人帳號]
-    H --> J[個人歷史紀錄頁面]
+    %% 進入詳細頁面
+    G --> H[點擊某間特定餐廳]
+    B --> H
     
-    %% 其他功能
-    C -->|2. 查看歷史紀錄| G
-    C -->|3. 捐獻香油錢| L[捐獻頁面 (顯示轉帳/金流)]
-    F -->|點擊香油錢| L
+    %% 餐廳資訊與互動
+    H --> I[查看詳細資訊、菜單、照片與歷史評論]
+    H --> J{是否登入？}
+    
+    %% 互動功能 (評論與收藏)
+    J -->|是| K[撰寫評價與選擇星星數]
+    K -->|送出表單| H
+    J -->|是| L[點擊「加入收藏」按鈕]
+    L -->|成功| H
+    
+    %% 我的收藏
+    C -->|是| M[點擊 個人收藏清單]
+    M --> N[查看過去收藏的所有餐廳]
+    N -->|點擊餐廳| H
 ```
 
 ## 2. 系統序列圖（Sequence Diagram）
 
-此序列圖描述核心情境：「**使用者進行抽籤並儲存結果**」的完整系統流轉過程。
+此序列圖以核心功能 **「新增一則餐廳評論」** 為例，描述從使用者操作到資料庫寫入的完整交互過程。
 
 ```mermaid
 sequenceDiagram
     actor User as 使用者
-    participant Browser as 瀏覽器 (JS/HTML)
-    participant Route as Flask Route (Controller)
-    participant Model as Database Model 
-    participant DB as SQLite
+    participant Browser as 瀏覽器 (視圖/Jinja2)
+    participant Route as Flask 路由 (Controller)
+    participant Model as 系統模組 (Model)
+    participant DB as SQLite (資料庫)
 
-    User->>Browser: 1. 點擊「開始抽籤」
-    Browser->>Browser: 2. 播放抽籤動畫 (不消耗伺服器資源)
-    Browser->>Route: 3. POST /draw (獲取抽籤結果)
-    Route->>Model: 4. 隨機讀取籤詩庫
-    Model-->>Route: 5. 回傳對應的籤詩資料
-    Route-->>Browser: 6. 回傳結果頁面 (Jinja2 HTML)
-
-    User->>Browser: 7. 點擊「儲存紀錄」
-    Browser->>Route: 8. POST /record/save
-    Route->>Route: 9. 檢查 Session 確認登入狀態
+    User->>Browser: 在餐廳頁面填寫短評、選擇星星數並「送出」
+    Browser->>Route: POST /restaurants/1/reviews (含表單資料)
     
-    alt 如果使用者尚未登入
-        Route-->>Browser: 10a. HTTP 302 導向至 /login
-        User->>Browser: 11a. 填寫帳密登入並自動回源
-    end
-
-    Route->>Model: 10b. 呼叫寫入算命紀錄函式
-    Model->>DB: 11b. INSERT INTO records (user_id, result)
-    DB-->>Model: 12. 寫入成功
-    Model-->>Route: 13. 回傳成功狀態
-    Route-->>Browser: 14. HTTP 302 導向至 /history
-    Browser->>User: 15. 顯示歷史紀錄列表
+    %% 邏輯驗證與處置
+    Route->>Route: 驗證 session 確認已登入
+    Route->>Route: 驗證輸入字數與評分合法性
+    
+    %% 模型與資料庫通訊
+    Route->>Model: 建立 Review 實體 (關聯 User_id 與 Restaurant_id)
+    Model->>DB: 執行 INSERT INTO reviews 語句
+    DB-->>Model: 回報寫入成功
+    Model-->>Route: 傳回成功狀態
+    
+    %% 回傳畫面
+    Route-->>Browser: HTTP 302 Redirect (重新導向) 至 /restaurants/1
+    Browser->>Route: GET /restaurants/1
+    Route->>Model: 查詢包含剛剛最新的一筆評論資料
+    Model-->>Route: 傳回所有評論
+    Route->>Browser: 透過 Jinja2 渲染最新完整頁面 HTML
+    Browser->>User: 顯示已更新的評論區與成功訊息 (Flash Message)
 ```
 
-## 3. 功能清單與路由對照表
+## 3. 功能清單對照表
 
-以下整理了系統內所有的主要功能，並對應到具體的 HTTP 方法、URL 路徑，與將被渲染的 Jinja2 模板檔，以利後續的 `/api-design` 與路由開發。
+根據 PRD 定義的 MVP 功能，將其轉換為開發所需的路由路徑與 HTTP 請求方法規劃：
 
-| 功能名稱 | 功能說明 | URL 路徑 | HTTP 方法 | 對應視圖 (Jinja2 / Controller 行為) |
-|----------|------|----------|-----------|------------------|
-| **網站首頁** | 顯示系統導覽與開始算命按鈕 | `/` | GET | `index.html` |
-| **會員註冊** | 填寫表單建立新使用者 | `/register` | GET, POST | `auth/register.html` |
-| **會員登入** | 登入並寫入 Session | `/login` | GET, POST | `auth/login.html` |
-| **會員登出** | 清除 Session 狀態 | `/logout` | GET | 無 (直接導回到首頁 `/`) |
-| **執行抽籤** | 送出抽籤請求獲取隨機結果 | `/draw` | POST | 核心邏輯處理後導向 `/result/<id>` |
-| **顯示結果** | 呈現籤詩或算命的詳細內容 | `/result/<id>` | GET | `result.html` |
-| **儲存結果** | 將當下這筆紀錄綁定使用者帳號 | `/record/save` | POST | 無 (直接導向至 `/history`) |
-| **歷史紀錄** | 列出自己過去儲存的算命結果 | `/history` | GET | `history.html` |
-| **捐香油錢** | 顯示線上捐款或轉帳資訊頁面 | `/donate` | GET, POST | `donate.html` |
+| 功能項目 | 對應 URL 路徑 (暫定) | HTTP 方法 | 說明 |
+| --- | --- | --- | --- |
+| **首頁 (餐廳列表)** | `/` 或 `/restaurants` | GET | 查詢並列出所有餐廳，或是推薦清單 |
+| **關鍵字與條件篩選** | `/restaurants/search` | GET | 根據 `?q=` 或其他篩選條件 (距離/價格) 渲染結果 |
+| **進階：會員註冊** | `/register` | GET, POST | GET: 顯示註冊表單 / POST: 處理密碼加密並新建帳號 |
+| **進階：會員登入** | `/login` | GET, POST | GET: 顯示登入表單 / POST: 解析帳密並寫入 Session |
+| **進階：會員登出** | `/logout` | GET, POST | 清除 Session 狀態並導回首頁 |
+| **餐廳詳細資訊** | `/restaurants/<int:id>` | GET | 使用者點進特定餐廳，獲取詳細資訊與此店的歷史評論 |
+| **新增評論與評分** | `/restaurants/<int:id>/reviews` | POST | 接收前端表單，將評論寫入資料庫並綁定外鍵關係 |
+| **加入或移除收藏** | `/restaurants/<int:id>/favorite` | POST | 切換該使用者對於該餐廳的收藏狀態 |
+| **個人專屬收藏頁** | `/favorites` | GET | 顯示目前使用者所有收藏的餐廳列表 |
+
