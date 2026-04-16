@@ -1,4 +1,4 @@
-from flask import Blueprint
+from flask import Blueprint, redirect, url_for
 
 main_bp = Blueprint('main', __name__)
 
@@ -7,4 +7,4 @@ def index():
     """
     GET: 首頁，直接重導向至餐廳清單。
     """
-    pass
+    return redirect(url_for('restaurants.list_restaurants'))

@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center align-items-center" style="min-height: 60vh;">
+    <div class="col-md-7 col-lg-5">
+        <div class="card shadow-lg border-0 rounded-4 overflow-hidden mt-3">
+            <div class="card-body p-5">
+                <div class="text-center mb-5">
+                    <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-inline-flex p-3 mb-3">
+                        <i class="bi bi-person-plus-fill fs-2"></i>
+                    </div>
+                    <h2 class="fw-bold text-dark">建立會員帳號</h2>
+                    <p class="text-muted">加入校園專屬的美食生態圈</p>
+                </div>
+
+                <form action="{{ url_for('auth.register') }}" method="POST">
+                    <div class="mb-4">
+                        <label for="username" class="form-label fw-medium text-dark">使用者名稱</label>
+                        <div class="input-group input-group-lg shadow-sm rounded-3">
+                            <span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-person"></i></span>
+                            <input type="text" class="form-control border-start-0 ps-0" id="username" name="username" required placeholder="例如：Alice">
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <label for="email" class="form-label fw-medium text-dark">Email 信箱 (登入用帳號)</label>
+                        <div class="input-group input-group-lg shadow-sm rounded-3">
+                            <span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-envelope"></i></span>
+                            <input type="email" class="form-control border-start-0 ps-0" id="email" name="email" required placeholder="alice@example.com">
+                        </div>
+                    </div>
+                    <div class="mb-5">
+                        <label for="password" class="form-label fw-medium text-dark">設定密碼</label>
+                        <div class="input-group input-group-lg shadow-sm rounded-3">
+                            <span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-lock"></i></span>
+                            <input type="password" class="form-control border-start-0 ps-0" id="password" name="password" required placeholder="至少6位英數字">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-lg w-100 rounded-pill shadow-sm fw-bold">馬上建立帳號</button>
+                    
+                    <div class="text-center mt-4">
+                        <span class="text-muted">已經有帳號了嗎？</span> 
+                        <a href="{{ url_for('auth.login') }}" class="text-primary text-decoration-none fw-bold ms-1">立即登入</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center align-items-center" style="min-height: 60vh;">
+    <div class="col-md-7 col-lg-5">
+        <div class="card shadow-lg border-0 rounded-4 overflow-hidden mt-3">
+            <div class="card-body p-5">
+                <div class="text-center mb-5">
+                    <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-inline-flex p-3 mb-3">
+                        <i class="bi bi-shield-lock-fill fs-2"></i>
+                    </div>
+                    <h2 class="fw-bold text-dark">歡迎回來</h2>
+                    <p class="text-muted">登入以發表評論、收藏你的最愛店家</p>
+                </div>
+
+                <form action="{{ url_for('auth.login') }}" method="POST">
+                    <div class="mb-4">
+                        <label for="email" class="form-label fw-medium text-dark">Email 信箱</label>
+                        <div class="input-group input-group-lg shadow-sm rounded-3">
+                            <span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-envelope"></i></span>
+                            <input type="email" class="form-control border-start-0 ps-0" id="email" name="email" required placeholder="您註冊時填寫的信箱">
+                        </div>
+                    </div>
+                    <div class="mb-5">
+                        <label for="password" class="form-label fw-medium text-dark">密碼</label>
+                        <div class="input-group input-group-lg shadow-sm rounded-3">
+                            <span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-key"></i></span>
+                            <input type="password" class="form-control border-start-0 ps-0" id="password" name="password" required placeholder="輸入您的密碼">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-lg w-100 rounded-pill shadow-sm fw-bold">安全登入</button>
+                    
+                    <div class="text-center mt-4">
+                        <span class="text-muted">還沒有帳號？</span> 
+                        <a href="{{ url_for('auth.register') }}" class="text-primary text-decoration-none fw-bold ms-1">註冊一個</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
